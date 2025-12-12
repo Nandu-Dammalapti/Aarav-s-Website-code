@@ -175,64 +175,71 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
-    if 'video' not in request.files:
-        return jsonify({'error': 'No video file provided'}), 400
-
-    file = request.files['video']
-
-    if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({'error': 'Invalid file type. Allowed: mp4, avi, mov, mkv, webm'}), 400
-
-    # Save uploaded file
-    filename = secure_filename(file.filename)
-    unique_filename = f"{uuid.uuid4()}_{filename}"
-    filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-
-    # Ensure upload directory exists
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-    file.save(filepath)
-
-    # Process video
-    frames_data, error = process_video(filepath)
-
-    # Clean up uploaded file
     try:
-        os.remove(filepath)
-    except:
-        pass
+        if 'video' not in request.files:
+            return jsonify({'error': 'No video file provided'}), 400
 
-    if error:
-        return jsonify({'error': error}), 500
+        file = request.files['video']
 
-    if not frames_data:
-        return jsonify({'error': 'No frames could be processed'}), 500
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
 
-    # Calculate summary statistics
-    total_frames = len(frames_data)
-    bad_form_frames = sum(1 for f in frames_data if f['bad_form'])
-    good_form_frames = total_frames - bad_form_frames
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file type. Allowed: mp4, avi, mov, mkv, webm'}), 400
 
-    avg_left_angle = np.mean([f['left_angle'] for f in frames_data if f['left_angle'] is not None])
-    avg_right_angle = np.mean([f['right_angle'] for f in frames_data if f['right_angle'] is not None])
+        # Save uploaded file
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
 
-    summary = {
-        'total_frames': total_frames,
-        'good_form_frames': good_form_frames,
-        'bad_form_frames': bad_form_frames,
-        'form_score': round((good_form_frames / total_frames) * 100, 1) if total_frames > 0 else 0,
-        'avg_left_angle': round(avg_left_angle, 2) if not np.isnan(avg_left_angle) else 0,
-        'avg_right_angle': round(avg_right_angle, 2) if not np.isnan(avg_right_angle) else 0
-    }
+        # Ensure upload directory exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-    return jsonify({
-        'success': True,
-        'frames': frames_data,
-        'summary': summary
-    })
+        file.save(filepath)
+
+        # Process video
+        frames_data, error = process_video(filepath)
+
+        # Clean up uploaded file
+        try:
+            os.remove(filepath)
+        except:
+            pass
+
+        if error:
+            return jsonify({'error': error}), 500
+
+        if not frames_data:
+            return jsonify({'error': 'No frames could be processed'}), 500
+
+        # Calculate summary statistics
+        total_frames = len(frames_data)
+        bad_form_frames = sum(1 for f in frames_data if f['bad_form'])
+        good_form_frames = total_frames - bad_form_frames
+
+        avg_left_angle = np.mean([f['left_angle'] for f in frames_data if f['left_angle'] is not None])
+        avg_right_angle = np.mean([f['right_angle'] for f in frames_data if f['right_angle'] is not None])
+
+        summary = {
+            'total_frames': total_frames,
+            'good_form_frames': good_form_frames,
+            'bad_form_frames': bad_form_frames,
+            'form_score': round((good_form_frames / total_frames) * 100, 1) if total_frames > 0 else 0,
+            'avg_left_angle': round(avg_left_angle, 2) if not np.isnan(avg_left_angle) else 0,
+            'avg_right_angle': round(avg_right_angle, 2) if not np.isnan(avg_right_angle) else 0
+        }
+
+        return jsonify({
+            'success': True,
+            'frames': frames_data,
+            'summary': summary
+        })
+
+    except Exception as e:
+        print(f"Error processing video: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Processing error: {str(e)}'}), 500
 
 
 if __name__ == '__main__':

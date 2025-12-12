@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bicep Curl Form Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.5 6.5H4C3.44772 6.5 3 6.94772 3 7.5V16.5C3 17.0523 3.44772 17.5 4 17.5H6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M17.5 6.5H20C20.5523 6.5 21 6.94772 21 7.5V16.5C21 17.0523 20.5523 17.5 20 17.5H17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="6.5" y="4" width="11" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <line x1="12" y1="8" x2="12" y2="16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h1>Bicep Curl Analyzer</h1>
+            </div>
+            <p class="tagline">AI-powered form analysis for perfect bicep curls</p>
+        </header>
+
+        <!-- Upload Section -->
+        <section class="upload-section" id="uploadSection">
+            <div class="upload-card">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="videoInput" accept="video/*" hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 4V16M12 4L8 8M12 4L16 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M4 14V18C4 19.1046 4.89543 20 6 20H18C19.1046 20 20 19.1046 20 18V14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <h3>Upload Your Workout Video</h3>
+                        <p>Drag and drop your video here, or click to browse</p>
+                        <p class="file-types">Supported formats: MP4, AVI, MOV, MKV, WebM</p>
+                    </div>
+                </div>
+                <div class="selected-file" id="selectedFile" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 2V8H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M10 12L8 14L10 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M14 12L16 14L14 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="fileName"></span>
+                    <button class="remove-file" id="removeFile">&times;</button>
+                </div>
+                <button class="analyze-btn" id="analyzeBtn" disabled>
+                    <span class="btn-text">Analyze Form</span>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Section -->
+        <section class="loading-section" id="loadingSection" style="display: none;">
+            <div class="loading-card">
+                <div class="loading-spinner"></div>
+                <h3>Analyzing Your Form</h3>
+                <p>Processing video frames with AI pose detection...</p>
+                <div class="loading-progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <!-- Summary Card -->
+            <div class="summary-card">
+                <h2>Analysis Summary</h2>
+                <div class="summary-grid">
+                    <div class="summary-item score">
+                        <div class="summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                <path d="M8 12L11 15L16 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-value" id="formScore">0%</div>
+                        <div class="summary-label">Form Score</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon good">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M14 9V5C14 4.46957 13.7893 3.96086 13.4142 3.58579C13.0391 3.21071 12.5304 3 12 3C11.4696 3 10.9609 3.21071 10.5858 3.58579C10.2107 3.96086 10 4.46957 10 5V9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M6 11H18L17 21H7L6 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-value" id="goodFrames">0</div>
+                        <div class="summary-label">Good Form Frames</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon bad">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 9V13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="12" cy="17" r="1" fill="currentColor"/>
+                                <path d="M12 3L21.5 19.5H2.5L12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-value" id="badFrames">0</div>
+                        <div class="summary-label">Bad Form Frames</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        <div class="summary-value">
+                            <span id="avgLeftAngle">0</span>° / <span id="avgRightAngle">0</span>°
+                        </div>
+                        <div class="summary-label">Avg Left / Right Angle</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Angle Data Table -->
+            <div class="angles-card">
+                <h2>Frame-by-Frame Angle Data</h2>
+                <div class="angles-table-container">
+                    <table class="angles-table" id="anglesTable">
+                        <thead>
+                            <tr>
+                                <th>Frame</th>
+                                <th>Left Shoulder Angle</th>
+                                <th>Right Shoulder Angle</th>
+                                <th>Form Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="anglesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Frames Gallery -->
+            <div class="frames-card">
+                <h2>Analyzed Frames</h2>
+                <p class="frames-info">Scroll through your analyzed workout frames with pose landmarks</p>
+                <div class="frames-gallery" id="framesGallery">
+                </div>
+            </div>
+
+            <!-- Reset Button -->
+            <button class="reset-btn" id="resetBtn">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 4V10H7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3.51 15C4.15839 16.8404 5.38734 18.4202 7.01166 19.5014C8.63598 20.5826 10.5677 21.1066 12.5157 20.9945C14.4637 20.8824 16.3226 20.1402 17.8121 18.8798C19.3017 17.6193 20.3413 15.9089 20.7742 14.0064C21.2072 12.1038 21.0101 10.1135 20.2126 8.33111C19.4152 6.54872 18.0605 5.06514 16.3528 4.09966C14.6451 3.13418 12.6769 2.73894 10.7285 2.97368C8.78007 3.20842 6.95656 4.06018 5.52 5.40001L1 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Analyze Another Video
+            </button>
+        </section>
+
+        <!-- Tips Section -->
+        <section class="tips-section">
+            <h2>Tips for Perfect Bicep Curls</h2>
+            <div class="tips-grid">
+                <div class="tip-card">
+                    <div class="tip-number">1</div>
+                    <h3>Keep Elbows Stationary</h3>
+                    <p>Your elbows should stay close to your body and not move forward during the curl</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-number">2</div>
+                    <h3>Control the Movement</h3>
+                    <p>Avoid swinging or using momentum. Slow, controlled movements maximize muscle engagement</p>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-number">3</div>
+                    <h3>Shoulder Angle &lt; 30°</h3>
+                    <p>Keep your shoulder angle below 30 degrees to maintain proper form throughout the exercise</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by MediaPipe Pose Detection</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
